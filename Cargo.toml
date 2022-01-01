@@ -1,0 +1,17 @@
+[package]
+name = "libvim_rs"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+links = "libvim"
+
+[lib]
+name="libvim_rs"
+path="lib.rs"
+
+[dependencies]
+libc = "0.2.112"
+
+[build-dependencies]
+pkg-config = "0.3.24"
+
