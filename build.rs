@@ -32,4 +32,6 @@ fn main() {
         Ok(output) => eprintln!("Status {}", output),
         Err(error) => panic!("Libvim build exit with error {}", error)
     }
+
+    fs::copy("./libvim/src/_esy/default/build/libvim.a", "./libs/libvim.a").expect("Failed to copy library");
 }
