@@ -3,7 +3,6 @@ name = "libvim_rs"
 version = "0.1.0"
 edition = "2021"
 build = "build.rs"
-links = "libvim"
 
 [lib]
 name="libvim_rs"
@@ -13,5 +12,6 @@ path="lib.rs"
 libc = "0.2.112"
 
 [build-dependencies]
+cc = "1.0.72"
 pkg-config = "0.3.24"
 

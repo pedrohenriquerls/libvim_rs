@@ -1,7 +1,7 @@
 use libc::{ c_int, c_char };
 use std::ffi::CString;
 
-#[link(name = "libvim", kind = "static")]
+#[link(name = "libvim")]
 #[allow(non_snake_case)]
 extern {
     fn vimInit(argc: c_int, argv: *const *const c_char);
