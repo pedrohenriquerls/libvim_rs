@@ -20,6 +20,7 @@ fn main() {
             .args(&["submodule", "update", "--init", "libvim"])
             .status();
     }
+    println!("cargo:rerun-if-changed=./libvim/src/libvim.h");
 
     let mut child = Command::new("bash")
             .arg("-c")
