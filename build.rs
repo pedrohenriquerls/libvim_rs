@@ -31,7 +31,8 @@ fn main() {
         Err(error) => panic!("Libvim build exit with error {}", error)
     }
     let dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let lib_path = Path::new(&dir).join("libvim/src/_esy/default/build");
+    let source = Path::new(&dir);
+    let lib_path = source.join("libvim/src/_esy/default/build");
     println!("cargo:rustc-link-lib=intl");
     println!("cargo:rustc-link-lib=vim");
     println!("cargo:rustc-link-lib=m");
@@ -39,4 +40,26 @@ fn main() {
     println!("cargo:rustc-link-lib=iconv");
     println!("cargo:rustc-link-lib=framework=AppKit");
     println!("cargo:rustc-link-search={}", lib_path.display());
+
+    let mut child = Command::new("bash")
+            .arg("-c")
+            .arg(format!("cp {}/*.pro {}", lib_path.join("proto").display(), lib_path.display()))
+            .spawn()
+            .expect("Failed to libvim build");
+    match child.wait() {
+        Ok(output) => eprintln!("Status {}", output),
+        Err(error) => panic!("Libvim build exit with error {}", error)
+    }
+
+    let clang_args = ["-DHAVE_CONFIG_H", "-DMACOS_X", "-DMACOS_X_DARWIN"];
+    let bindings = bindgen::Builder::default()
+        .header(lib_path.join("libvim.h").to_str().expect("Return the heade file path"))
+        .clang_args(clang_args)
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .generate()
+        .expect("Unable to generate bindings");
+
+    bindings
+        .write_to_file(source.join("bindings.rs"))
+        .expect("Couldn't write bindings!");
 }
