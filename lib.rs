@@ -14,7 +14,6 @@ pub enum VimMode {
 
 pub fn vim_get_mode() -> VimMode {
     let result = unsafe { vimGetMode() };
-    println!("Mode -> {}", result);
     match result {
         1 | 257 => VimMode::NORMAL,
         16 => VimMode::INSERT,
@@ -54,8 +53,28 @@ pub fn vim_new_buffer() {
     dbg!(buffer);
 }
 
+pub fn vim_buffer_open(file_path: &str) -> Option<&mut file_buffer> {
+    let file_path_c_string = CString::new(file_path).unwrap().into_raw() as *mut u8;
+    unsafe { 
+        let result = vimBufferOpen(file_path_c_string, 1, 0);
+        if result.is_null() {
+            None
+        } else {
+            Some(&mut *result)
+        }
+    }
+}
+
 pub fn vim_cursor_get_line() -> c_long {
     unsafe { vimCursorGetLine() }
+}
+
+pub fn vim_set_window_size(size: (c_int, c_int)) {
+    let (width, height) = size;
+    unsafe {
+        vimWindowSetHeight(height);
+        vimWindowSetWidth(width);
+    }
 }
 
 #[cfg(test)]
@@ -64,24 +83,46 @@ mod tests {
     use std::path::Path;
     use super::*;
 
-    //#[test] 
-    //fn navigation_G_gg_test() {
-    //    vim_execute(&mut "e!".to_string());
-    //    vim_key(&mut "<esc>".to_string());
-    //    vim_key(&mut "<esc>".to_string());
-    //    vim_input(&mut "g".to_string());
-    //    vim_input(&mut "g".to_string());
+    fn setup() {
+        vim_init();
+        vim_set_window_size((50, 100));
+    }
 
-    //    vim_input(&mut "G".to_string());
-    //    assert_eq!(vim_cursor_get_line() > 1, true);
-
-    //    vim_input(&mut "g".to_string());
-    //    vim_input(&mut "g".to_string());
-    //    assert_eq!(vim_cursor_get_line(), 1);
-    //}
+    fn teardown() {
+        vim_execute("qall!");
+    }
 
     #[test]
-    fn vim_init_test() {
+    fn suite_test() {
+        setup();
+        navigation_and_file_creation_test();
+        navigation_G_gg_test();
+    }
+
+    fn navigation_G_gg_test() {
+        vim_buffer_open("./test/futurama-quotes.txt");
+
+        vim_execute("e!");
+        vim_key("<esc>");
+        vim_key("<esc>");
+        vim_input("g");
+        vim_input("g");
+        assert_eq!(vim_cursor_get_line(), 1);
+
+        vim_input("G");
+        assert_eq!(vim_cursor_get_line(), 44);
+            //assert_eq!(vim_cursor_get_line() > 1, true);
+
+        vim_input("g");
+        vim_input("g");
+        assert_eq!(vim_cursor_get_line(), 1);
+        vim_input("qall!");
+        assert_eq!("a", "b");
+        //assert_eq!(vim_cursor_get_line(), 1);
+        teardown();
+    }
+
+    fn navigation_and_file_creation_test() {
         let filename = "./test/file_test";
         if Path::new(filename).exists() {
             fs::remove_file(filename).unwrap();
@@ -97,7 +138,7 @@ mod tests {
         vim_key("<ESC>");
         vim_key("<ESC>");
         assert_eq!(vim_get_mode(), VimMode::NORMAL);
-        vim_execute(format!("w {}", filename).as_str());
+        vim_execute("w");
         assert_eq!(fs::read_to_string(filename).expect("Read file"), "blastoise\n");
         vim_key("<ESC>");
         assert_eq!(vim_get_mode(), VimMode::NORMAL);
@@ -112,5 +153,7 @@ mod tests {
         vim_execute("w");
         assert_eq!(fs::read_to_string(filename).expect("Read file"), "test\n");
         fs::remove_file(filename).expect("File deleted");
+
+        teardown();
     }
 }
