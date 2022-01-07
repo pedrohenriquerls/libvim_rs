@@ -1,5 +1,5 @@
-use libc::{ c_int, c_char, c_uchar };
-use std::{ os::raw::c_long, ffi::CString };
+use libc::{ c_int, c_char, c_uchar, c_ulong };
+use std::{ os::raw::c_long, ffi::CString, ffi::CStr };
 
 include!("./bindings.rs");
 
@@ -48,9 +48,51 @@ pub fn vim_key(cmd: &str) {
     unsafe { vimKey(CString::new(cmd).unwrap().into_raw() as *mut u8); }
 }
 
-pub fn vim_new_buffer() {
-    let buffer = unsafe { vimBufferNew(1 as c_int); };
-    dbg!(buffer);
+pub fn vim_buffer_get_line(buffer: &mut file_buffer, line_number: c_long) -> Option<&str> {
+    unsafe { 
+        let result = vimBufferGetLine(buffer as *mut file_buffer, line_number);
+        if result.is_null() {
+            None
+        } else {
+            match CStr::from_ptr(result as *const c_char).to_str() {
+                Ok(val) => Some(val),
+                Err(error) => {
+                    panic!("Failed to read buffer lines {}", error);
+                }
+            }
+        }
+    }
+}
+
+pub fn vim_buffer_line_count(buffer: &mut file_buffer) -> c_ulong {
+    unsafe { vimBufferGetLineCount(buffer as *mut file_buffer) }
+}
+
+pub fn vim_buffer_get_id(buffer: &mut file_buffer) -> c_int {
+    unsafe { vimBufferGetId(buffer as *mut file_buffer) }
+}
+
+pub fn vim_load_buffer(file_path: &str) -> Option<&mut file_buffer> {
+    let file_path_c_string = CString::new(file_path).unwrap().into_raw() as *mut u8;
+    unsafe { 
+        let result = vimBufferLoad(file_path_c_string, 1, 0);
+        if result.is_null() {
+            None
+        } else {
+            Some(&mut *result)
+        }
+    }
+}
+
+pub fn vim_new_buffer<'a>() -> Option<&'a mut file_buffer> {
+    unsafe {
+        let result = vimBufferNew(1);
+        if result.is_null() {
+            None
+        } else {
+            Some(&mut *result)
+        }
+    }
 }
 
 pub fn vim_buffer_open(file_path: &str) -> Option<&mut file_buffer> {
@@ -100,7 +142,11 @@ mod tests {
     }
 
     fn navigation_G_gg_test() {
-        vim_buffer_open("./test/futurama-quotes.txt");
+        let buffer = vim_buffer_open("./test/futurama-quotes.txt").expect("Read file as buffer");
+        let quote = "    Leela: Oh, I'm sorry. Now I'll axe you again. Where is the mi-cro-wave?";
+        assert_eq!(vim_buffer_get_line(buffer, 14).expect("Read the line 14"), quote);
+        assert_eq!(vim_buffer_line_count(buffer), 44);
+        assert_eq!(vim_buffer_get_id(buffer), 3);
 
         vim_execute("e!");
         vim_key("<esc>");
@@ -111,14 +157,10 @@ mod tests {
 
         vim_input("G");
         assert_eq!(vim_cursor_get_line(), 44);
-            //assert_eq!(vim_cursor_get_line() > 1, true);
 
         vim_input("g");
         vim_input("g");
         assert_eq!(vim_cursor_get_line(), 1);
-        vim_input("qall!");
-        assert_eq!("a", "b");
-        //assert_eq!(vim_cursor_get_line(), 1);
         teardown();
     }
 
