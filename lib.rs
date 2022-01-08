@@ -3,23 +3,26 @@ use std::{ os::raw::c_long, ffi::CString, ffi::CStr };
 
 include!("./bindings.rs");
 
+pub type VimBuffer = file_buffer;
+pub type CursorPosition = pos_T;
+
 #[derive(PartialEq, Debug)]
 pub enum VimMode {
-    NORMAL,
-    VISUAL,
-    INSERT,
-    OP_PENDING,
-    UNKNOWN
+    Normal,
+    Visual,
+    Insert,
+    OpPending,
+    Unknown
 }
 
 pub fn vim_get_mode() -> VimMode {
     let result = unsafe { vimGetMode() };
     match result {
-        1 | 257 => VimMode::NORMAL,
-        16 => VimMode::INSERT,
-        2 => VimMode::VISUAL,
-        4 => VimMode::OP_PENDING,
-        _ => VimMode::UNKNOWN
+        1 | 257 => VimMode::Normal,
+        16 => VimMode::Insert,
+        2 => VimMode::Visual,
+        4 => VimMode::OpPending,
+        _ => VimMode::Unknown
     }
 }
 
@@ -178,27 +181,27 @@ mod tests {
             fs::remove_file(filename).unwrap();
         }
         vim_init();
-        assert_eq!(vim_get_mode(), VimMode::NORMAL);
+        assert_eq!(vim_get_mode(), VimMode::Normal);
         vim_execute(format!("e {}", filename).as_str());
         // vim_execute(format!("w {}", filename).as_str());
         //vim_new_buffer();
         vim_input("i");
-        assert_eq!(vim_get_mode(), VimMode::INSERT);
+        assert_eq!(vim_get_mode(), VimMode::Insert);
         vim_input("blastoise");
         vim_key("<ESC>");
         vim_key("<ESC>");
-        assert_eq!(vim_get_mode(), VimMode::NORMAL);
+        assert_eq!(vim_get_mode(), VimMode::Normal);
         vim_execute("w");
         assert_eq!(fs::read_to_string(filename).expect("Read file"), "blastoise\n");
         vim_key("<ESC>");
-        assert_eq!(vim_get_mode(), VimMode::NORMAL);
+        assert_eq!(vim_get_mode(), VimMode::Normal);
         vim_input("V");
-        assert_eq!(vim_get_mode(), VimMode::VISUAL);
+        assert_eq!(vim_get_mode(), VimMode::Visual);
         vim_input("d");
         vim_execute("w");
         assert_eq!(fs::read_to_string(filename).expect("Read file"), "");
         vim_input("i");
-        assert_eq!(vim_get_mode(), VimMode::INSERT);
+        assert_eq!(vim_get_mode(), VimMode::Insert);
         vim_input("test");
         vim_execute("w");
         assert_eq!(fs::read_to_string(filename).expect("Read file"), "test\n");
