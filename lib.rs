@@ -111,6 +111,10 @@ pub fn vim_cursor_get_line() -> c_long {
     unsafe { vimCursorGetLine() }
 }
 
+pub fn vim_cursor_get_position() -> pos_T {
+    unsafe { vimCursorGetPosition() }
+}
+
 pub fn vim_set_window_size(size: (c_int, c_int)) {
     let (width, height) = size;
     unsafe {
@@ -127,7 +131,7 @@ mod tests {
 
     fn setup() {
         vim_init();
-        vim_set_window_size((50, 100));
+        vim_set_window_size((1024, 768));
     }
 
     fn teardown() {
@@ -157,6 +161,10 @@ mod tests {
 
         vim_input("G");
         assert_eq!(vim_cursor_get_line(), 44);
+        vim_input("$");
+        let cursor = vim_cursor_get_position();
+        assert_eq!(cursor.lnum, 44);
+        assert_eq!(cursor.col, 29);
 
         vim_input("g");
         vim_input("g");
