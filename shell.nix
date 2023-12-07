@@ -16,11 +16,23 @@ let
   shell = pkgs.mkShell {
     buildInputs = [
       # other packages needed for compiling python libs
+      pkgs.nasm
+      pkgs.xorg.libXt
+      pkgs.xorg.libSM
+      pkgs.xorg.libICE
+      pkgs.perl536Packages.LinuxACL
+      pkgs.xorg.libXxf86vm
+      pkgs.xorg.libxkbfile
+      pkgs.nodePackages.node-gyp
+
+      pkgs.gcc
+      pkgs.glibc
       pkgs.gnumake
       pkgs.fetchutils
       pkgs.ncurses5
       pkgs.rustup
       pkgs.nodePackages.esy
+      pkgs.nodePackages.eas-cli
       pkgs.bash
       pkgs.readline
       pkgs.libffi
@@ -36,7 +48,7 @@ let
 
     shellHook = ''
       rustup update
-      # Augment the dynamic linker path
+# Augment the dynamic linker path
       export "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${lib-path}"
       export "LIBCLANG_PATH=${pkgs.libclang.lib}/lib";
     '';

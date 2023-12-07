@@ -28,7 +28,8 @@ fn main() {
     if !lib_path.join("libvim.a").exists() {
         let mut child = Command::new("bash")
             .arg("-c")
-            .arg("cd ./libvim/src && esy install && ./build/build-posix.sh")
+            // .arg("cd ./libvim/src && esy install && esy build")
+            .arg(format!("cd ./libvim/src && esy install && cur__install={} ./build/build-posix.sh", lib_path.display()))
             .spawn()
             .expect("Failed to libvim build");
         match child.wait() {
