@@ -28,7 +28,7 @@ fn main() {
     if !lib_path.join("libvim.a").exists() {
         let mut child = Command::new("bash")
             .arg("-c")
-            .arg("cd ./libvim/src && esy install && esy build")
+            .arg("cd ./libvim/src && esy install && ./build/build-posix.sh")
             .spawn()
             .expect("Failed to libvim build");
         match child.wait() {
@@ -60,11 +60,23 @@ fn main() {
 
     }
 
-    println!("cargo:rustc-link-lib=intl");
-    println!("cargo:rustc-link-lib=vim");
-    println!("cargo:rustc-link-lib=m");
-    println!("cargo:rustc-link-lib=ncurses");
-    println!("cargo:rustc-link-lib=iconv");
-    println!("cargo:rustc-link-lib=framework=AppKit");
-    println!("cargo:rustc-link-search={}", lib_path.display());
+    if cfg!(target_os = "linux") {
+        println!("cargo:rustc-link-lib=vim");
+        println!("cargo:rustc-link-lib=acl");
+        println!("cargo:rustc-link-lib=ICE");
+        println!("cargo:rustc-link-lib=X11");
+        println!("cargo:rustc-link-lib=SM");
+        println!("cargo:rustc-link-lib=framework=ncurses");
+        println!("cargo:rustc-link-lib=framework=Xt");
+    }
+
+    if cfg!(target_os="macos") {
+        println!("cargo:rustc-link-lib=intl");
+        println!("cargo:rustc-link-lib=vim");
+        println!("cargo:rustc-link-lib=m");
+        println!("cargo:rustc-link-lib=ncurses");
+        println!("cargo:rustc-link-lib=iconv");
+        println!("cargo:rustc-link-lib=framework=AppKit");
+        println!("cargo:rustc-link-search={}", lib_path.display());
+    }
 }
