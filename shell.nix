@@ -20,7 +20,6 @@ let
       pkgs.xorg.libXt
       pkgs.xorg.libSM
       pkgs.xorg.libICE
-      pkgs.perl536Packages.LinuxACL
       pkgs.xorg.libXxf86vm
       pkgs.xorg.libxkbfile
       pkgs.nodePackages.node-gyp
@@ -48,9 +47,6 @@ let
 
     shellHook = ''
       rustup update
-# Augment the dynamic linker path
-      export "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${lib-path}"
-      export "LIBCLANG_PATH=${pkgs.libclang.lib}/lib";
     '';
   };
 

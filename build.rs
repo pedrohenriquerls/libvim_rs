@@ -47,7 +47,12 @@ fn main() {
             Err(error) => panic!("Libvim build exit with error {}", error)
         }
 
+        #[cfg(target_os = "macos")]
         let clang_args = ["-DHAVE_CONFIG_H", "-DMACOS_X", "-DMACOS_X_DARWIN"];
+
+        #[cfg(target_os = "linux")]
+        let clang_args = ["-DHAVE_CONFIG_H"];
+
         let bindings = bindgen::Builder::default()
             .header(libvim_source.join("libvim.h").to_str().expect("Return the header file path"))
             .clang_args(clang_args)
@@ -63,12 +68,12 @@ fn main() {
 
     if cfg!(target_os = "linux") {
         println!("cargo:rustc-link-lib=vim");
-        println!("cargo:rustc-link-lib=acl");
+        // println!("cargo:rustc-link-lib=acl");
         println!("cargo:rustc-link-lib=ICE");
         println!("cargo:rustc-link-lib=X11");
         println!("cargo:rustc-link-lib=SM");
-        println!("cargo:rustc-link-lib=framework=ncurses");
-        println!("cargo:rustc-link-lib=framework=Xt");
+        println!("cargo:rustc-link-lib=ncurses");
+        println!("cargo:rustc-link-lib=Xt");
     }
 
     if cfg!(target_os="macos") {
@@ -78,6 +83,6 @@ fn main() {
         println!("cargo:rustc-link-lib=ncurses");
         println!("cargo:rustc-link-lib=iconv");
         println!("cargo:rustc-link-lib=framework=AppKit");
-        println!("cargo:rustc-link-search={}", lib_path.join("lib").display());
     }
+    println!("cargo:rustc-link-search={}", lib_path.join("lib").display());
 }
