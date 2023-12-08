@@ -18,18 +18,22 @@ fn main() {
         let _ = Command::new("git")
             .args(&["submodule", "update", "--init", "libvim"])
             .status();
+    } else {
+        let _ = Command::new("git")
+            .args(&["git submodule foreach --recursive git clean -xfd", "&&", "git submodule foreach --recursive git reset --hard"])
+            .status();
     }
+
     println!("cargo:rustc-cfg=libvim_vendored");
 
     let dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let source = Path::new(&dir);
-    let lib_path = source.join("libvim/src/_esy/default/build");
+    let lib_path = source.join("vim/build");
 
     if !lib_path.join("libvim.a").exists() {
         let mut child = Command::new("bash")
             .arg("-c")
-            // .arg("cd ./libvim/src && esy install && esy build")
-            .arg(format!("cd ./libvim/src && esy install && cur__install={} ./build/build-posix.sh", lib_path.display()))
+            .arg(format!("cd ./libvim/src && cur__install={} ./build/build-posix.sh", lib_path.display()))
             .spawn()
             .expect("Failed to libvim build");
         match child.wait() {
@@ -37,9 +41,10 @@ fn main() {
             Err(error) => panic!("Libvim build exit with error {}", error)
         }
 
+        let libvim_source = source.join("libvim/src");
         let mut child = Command::new("bash")
             .arg("-c")
-            .arg(format!("cp {}/*.pro {}", lib_path.join("proto").display(), lib_path.display()))
+            .arg(format!("cp {}/*.pro {}", libvim_source.join("proto").display(), libvim_source.display()))
             .spawn()
             .expect("Failed to libvim build");
         match child.wait() {
@@ -49,7 +54,7 @@ fn main() {
 
         let clang_args = ["-DHAVE_CONFIG_H", "-DMACOS_X", "-DMACOS_X_DARWIN"];
         let bindings = bindgen::Builder::default()
-            .header(lib_path.join("libvim.h").to_str().expect("Return the heade file path"))
+            .header(libvim_source.join("libvim.h").to_str().expect("Return the heade file path"))
             .clang_args(clang_args)
             .parse_callbacks(Box::new(bindgen::CargoCallbacks))
             .generate()
