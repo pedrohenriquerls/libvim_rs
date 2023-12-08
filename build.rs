@@ -18,19 +18,15 @@ fn main() {
         let _ = Command::new("git")
             .args(&["submodule", "update", "--init", "libvim"])
             .status();
-    } else {
-        let _ = Command::new("git")
-            .args(&["git submodule foreach --recursive git clean -xfd", "&&", "git submodule foreach --recursive git reset --hard"])
-            .status();
     }
-
     println!("cargo:rustc-cfg=libvim_vendored");
 
     let dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let source = Path::new(&dir);
     let lib_path = source.join("vim/build");
+    let libvim_source = lib_path.join("include");
 
-    if !lib_path.join("libvim.a").exists() {
+    if !lib_path.join("lib/libvim.a").exists() {
         let mut child = Command::new("bash")
             .arg("-c")
             .arg(format!("cd ./libvim/src && cur__install={} ./build/build-posix.sh", lib_path.display()))
@@ -41,7 +37,6 @@ fn main() {
             Err(error) => panic!("Libvim build exit with error {}", error)
         }
 
-        let libvim_source = source.join("libvim/src");
         let mut child = Command::new("bash")
             .arg("-c")
             .arg(format!("cp {}/*.pro {}", libvim_source.join("proto").display(), libvim_source.display()))
@@ -54,9 +49,9 @@ fn main() {
 
         let clang_args = ["-DHAVE_CONFIG_H", "-DMACOS_X", "-DMACOS_X_DARWIN"];
         let bindings = bindgen::Builder::default()
-            .header(libvim_source.join("libvim.h").to_str().expect("Return the heade file path"))
+            .header(libvim_source.join("libvim.h").to_str().expect("Return the header file path"))
             .clang_args(clang_args)
-            .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+            .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
             .generate()
             .expect("Unable to generate bindings");
 
@@ -83,6 +78,6 @@ fn main() {
         println!("cargo:rustc-link-lib=ncurses");
         println!("cargo:rustc-link-lib=iconv");
         println!("cargo:rustc-link-lib=framework=AppKit");
-        println!("cargo:rustc-link-search={}", lib_path.display());
+        println!("cargo:rustc-link-search={}", lib_path.join("lib").display());
     }
 }

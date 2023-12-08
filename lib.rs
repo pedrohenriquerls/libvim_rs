@@ -68,7 +68,12 @@ pub fn vim_buffer_get_line(buffer: &mut file_buffer, line_number: c_long) -> Opt
 }
 
 pub fn vim_buffer_line_count(buffer: &mut file_buffer) -> c_ulong {
-    unsafe { vimBufferGetLineCount(buffer as *mut file_buffer) }
+    unsafe {
+        match vimBufferGetLineCount(buffer as *mut file_buffer).try_into() {
+            Ok(output) => output,
+            Err(_) => 0
+        }
+    }
 }
 
 pub fn vim_buffer_get_id(buffer: &mut file_buffer) -> c_int {
