@@ -47,6 +47,10 @@ let
 
     shellHook = ''
       rustup update
+
+      # Augment the dynamic linker path
+      export "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${lib-path}"
+      export "LIBCLANG_PATH=${pkgs.libclang.lib}/lib";
     '';
   };
 
