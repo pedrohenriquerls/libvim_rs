@@ -1,5 +1,8 @@
 .DS_Store
 /target
 /vim
-!/vim/build/lib/.keep
+!/vim/build/linux/lib/.keep
+!/vim/build/linux/include/.keep
+!/vim/build/macos/lib/.keep
+!/vim/build/macos/include/.keep
 libvim.a
