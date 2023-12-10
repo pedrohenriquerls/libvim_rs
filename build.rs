@@ -1,6 +1,8 @@
 use std::env;
 use std::path::Path;
 use std::process::Command;
+use std::fs::File;
+use std::io::Write;
 
 fn main() {
     let vendored = env::var("CARGO_FEATURE_VENDORED").is_ok();
@@ -53,22 +55,16 @@ fn main() {
         #[cfg(target_os = "linux")]
         let clang_args = ["-DHAVE_CONFIG_H"];
 
-        let bindings = bindgen::Builder::default()
-            .header(libvim_source.join("libvim.h").to_str().expect("Return the header file path"))
-            .clang_args(clang_args)
-            .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
-            .generate()
-            .expect("Unable to generate bindings");
+        // let bindings = bindgen::Builder::default()
+        //     .header(libvim_source.join("libvim.h").to_str().expect("Return the header file path"))
+        //     .clang_args(clang_args)
+        //     .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+        //     .generate()
+        //     .expect("Unable to generate bindings");
 
-        let binding_path = source.join("bindings.rs");
-        match std::fs::OpenOptions::new().truncate(true).open(binding_path.clone()) {
-            Ok(file) => file.set_len(0).expect("Failed recreating the binding.rs file"),
-            Err(error) => panic!("Failed recreating the binding.rs file => {}", error)
-        }
-        bindings
-            .write_to_file(binding_path)
-            .expect("Couldn't write bindings!");
-
+        // bindings
+        //     .write_to_file(binding_path)
+        //     .expect("Couldn't write bindings!");
     }
 
     if cfg!(target_os = "linux") {
