@@ -60,8 +60,13 @@ fn main() {
             .generate()
             .expect("Unable to generate bindings");
 
+        let binding_path = source.join("bindings.rs");
+        match std::fs::OpenOptions::new().truncate(true).open(binding_path.clone()) {
+            Ok(file) => file.set_len(0).expect("Failed recreating the binding.rs file"),
+            Err(error) => panic!("Failed recreating the binding.rs file => {}", error)
+        }
         bindings
-            .write_to_file(source.join("bindings.rs"))
+            .write_to_file(binding_path)
             .expect("Couldn't write bindings!");
 
     }
