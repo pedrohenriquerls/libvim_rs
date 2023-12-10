@@ -85,4 +85,5 @@ fn main() {
         println!("cargo:rustc-link-lib=framework=AppKit");
     }
     println!("cargo:rustc-link-search={}", lib_path.join("lib").display());
+    println!("cargo:rustc-link=static={}", lib_path.join("lib").display());
 }

@@ -1,6 +1,9 @@
 use libc::{ c_int, c_char, c_uchar, c_ulong };
 use std::{ os::raw::c_long, ffi::CString, ffi::CStr };
 
+#[allow(non_upper_case_globals)]
+#[allow(non_camel_case_types)]
+#[allow(non_snake_case)]
 include!("./bindings.rs");
 
 pub type VimBuffer = file_buffer;
