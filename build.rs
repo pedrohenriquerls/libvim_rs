@@ -77,7 +77,7 @@ fn main() {
     }
 
     if cfg!(target_os="macos") {
-        println!("cargo:rustc-link-lib=intl");
+        // println!("cargo:rustc-link-lib=intl");
         println!("cargo:rustc-link-lib=vim");
         println!("cargo:rustc-link-lib=m");
         println!("cargo:rustc-link-lib=ncurses");
