@@ -1,7 +1,7 @@
 let
   nixpkgs-src = builtins.fetchTarball {
     # 23.05
-    url = "https://github.com/NixOS/nixpkgs/archive/nixos-23.05.tar.gz";
+    url = "https://github.com/NixOS/nixpkgs/archive/nixos-25.11.tar.gz";
   };
 
   pkgs = import nixpkgs-src {
@@ -11,39 +11,47 @@ let
     };
   };
 
+  lib = pkgs.lib;
+  stdenv = pkgs.stdenv;
+
   lib-path = with pkgs; lib.makeLibraryPath [ libffi openssl ];
 
   shell = pkgs.mkShell {
-    buildInputs = [
+    buildInputs = with pkgs; [
       # other packages needed for compiling python libs
-      pkgs.nasm
-      pkgs.xorg.libXt
-      pkgs.xorg.libSM
-      pkgs.xorg.libICE
-      pkgs.xorg.libXxf86vm
-      pkgs.xorg.libxkbfile
-      pkgs.nodePackages.node-gyp
+      nasm
+      xorg.libXt
+      xorg.libSM
+      xorg.libICE
+      xorg.libXxf86vm
+      xorg.libxkbfile
+      nodePackages.node-gyp
 
-      pkgs.gcc
-      pkgs.glibc
-      pkgs.gnumake
-      pkgs.fetchutils
-      pkgs.ncurses5
-      pkgs.rustup
-      pkgs.nodePackages.esy
-      pkgs.nodePackages.eas-cli
-      pkgs.bash
-      pkgs.readline
-      pkgs.libffi
-      pkgs.openssl
-      pkgs.llvmPackages.libcxxStdenv
-      pkgs.clang
+      gcc
+      gnumake
+      fetchutils
+      ncurses5
+      rustup
+      nodePackages.eas-cli
+      bash
+      readline
+      libffi
+      openssl
+      llvmPackages.libcxxStdenv
+      clang
 
       # unfortunately needed because of messing with LD_LIBRARY_PATH below
-      pkgs.git
-      pkgs.openssh
-      pkgs.rsync
-    ];
+      git
+      openssh
+      rsync
+    ]
+    # Conditionally add glibc only on Linux (not available on Darwin)
+    ++ lib.optional stdenv.isLinux pkgs.glibc
+    # Conditionally add Darwin-specific dependencies
+    # Note: libiconv is included in the SDK by default, but we add it explicitly
+    # if the iconv binary is needed. Frameworks like Security are available
+    # through the default SDK automatically.
+    ++ lib.optional stdenv.isDarwin pkgs.libiconv;
 
     shellHook = ''
       rustup update
